@@ -34,6 +34,11 @@ class Pair : protected Pointers {
   static int instance_total;     // # of Pair classes ever instantiated
 
   double eng_vdwl,eng_coul;      // accumulated energies
+
+  /* polarization stuff */
+  double eng_pol;
+  /* end polarization stuff */
+
   double virial[6];              // accumulated virial
   double *eatom,**vatom;         // accumulated per-atom energy/virial
 

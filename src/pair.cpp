@@ -57,6 +57,10 @@ Pair::Pair(LAMMPS *lmp) : Pointers(lmp)
 
   eng_vdwl = eng_coul = 0.0;
 
+  /* polarization stuff */
+  eng_pol = 0.0;
+  /* end polarization stuff */
+
   comm_forward = comm_reverse = comm_reverse_off = 0;
 
   single_enable = 1;
@@ -800,7 +804,14 @@ void Pair::ev_setup(int eflag, int vflag, int alloc)
   // use force->newton instead of newton_pair
   //   b/c some bonds/dihedrals call pair::ev_tally with pairwise info
 
+#if 0
   if (eflag_global) eng_vdwl = eng_coul = 0.0;
+#else
+  /* polarization stuff */
+  if (eflag_global) eng_vdwl = eng_coul = eng_pol = 0.0;
+  /* end polarization stuff */
+#endif
+
   if (vflag_global) for (i = 0; i < 6; i++) virial[i] = 0.0;
   if (eflag_atom && alloc) {
     n = atom->nlocal;

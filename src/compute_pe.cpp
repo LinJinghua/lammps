@@ -77,7 +77,12 @@ double ComputePE::compute_scalar()
 
   double one = 0.0;
   if (pairflag && force->pair)
+  {
+    /* polarization stuff */
     one += force->pair->eng_vdwl + force->pair->eng_coul;
+    one += force->pair->eng_pol;
+    /* end polarization stuff */
+  }
 
   if (atom->molecular) {
     if (bondflag && force->bond) one += force->bond->energy;

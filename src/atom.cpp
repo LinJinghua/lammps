@@ -192,6 +192,13 @@ Atom::Atom(LAMMPS *lmp) : Pointers(lmp)
   eff_plastic_strain_rate_flag = 0;
   damage_flag = 0;
 
+  /* polarization stuff */
+  static_polarizability = NULL;
+  ef_static = NULL;
+  mu_induced = NULL;
+  static_polarizability_flag = 0;
+  /* end polarization stuff */
+
   // Peridynamic scale factor
 
   pdscale = 1.0;
@@ -320,6 +327,12 @@ Atom::~Atom()
   memory->destroy(edpd_flux);
   memory->destroy(edpd_cv);
 
+  /* polarization stuff */
+  memory->destroy(static_polarizability);
+  memory->destroy(ef_static);
+  memory->destroy(mu_induced);
+  /* end polarization stuff */
+
   memory->destroy(nspecial);
   memory->destroy(special);
 
@@ -423,6 +436,10 @@ void Atom::create_avec(const char *style, int narg, char **arg, int trysuffix)
 
   sphere_flag = peri_flag = electron_flag = 0;
   wavepacket_flag = sph_flag = 0;
+
+  /* polarization stuff */
+  static_polarizability_flag = 0;
+  /* end polarization stuff */
 
   molecule_flag = 0;
   q_flag = mu_flag = 0;

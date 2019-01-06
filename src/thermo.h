@@ -159,6 +159,10 @@ class Thermo : protected Pointers {
   void compute_elong();
   void compute_etail();
 
+    /* polarization stuff */
+  void compute_epol();
+  /* end polarization stuff */
+
   void compute_vol();
   void compute_density();
   void compute_lx();

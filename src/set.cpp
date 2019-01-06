@@ -48,7 +48,13 @@ enum{TYPE,TYPE_FRACTION,MOLECULE,X,Y,Z,CHARGE,MASS,SHAPE,LENGTH,TRI,
      THETA,THETA_RANDOM,ANGMOM,OMEGA,
      DIAMETER,DENSITY,VOLUME,IMAGE,BOND,ANGLE,DIHEDRAL,IMPROPER,
      MESO_E,MESO_CV,MESO_RHO,EDPD_TEMP,EDPD_CV,CC,SMD_MASS_DENSITY,
+#if 0
      SMD_CONTACT_RADIUS,DPDTHETA,INAME,DNAME,VX,VY,VZ};
+#else
+     /* polarization stuff */
+     SMD_CONTACT_RADIUS,DPDTHETA,INAME,DNAME,VX,VY,VZ,STATIC_POLARIZABILITY};
+     /* end polarization stuff */
+#endif
 
 #define BIG INT_MAX
 
@@ -192,6 +198,18 @@ void Set::command(int narg, char **arg)
         error->all(FLERR,"Cannot set this attribute for this atom style");
       set(SHAPE);
       iarg += 4;
+
+    /* polarization stuff */
+    } else if (strcmp(arg[iarg],"static_polarizability") == 0) {
+      if (iarg+2 > narg) error->all(FLERR,"Illegal set command");
+      dvalue = force->numeric(FLERR,arg[iarg+1]);
+      if (!atom->static_polarizability_flag)
+        error->all(FLERR,"Cannot set this attribute for this atom style");
+      if (dvalue < 0.0) 
+        error->all(FLERR,"Invalid static polarizability in set command");
+      set(STATIC_POLARIZABILITY);
+      iarg += 2;
+    /* end polarization stuff */
 
     } else if (strcmp(arg[iarg],"length") == 0) {
       if (iarg+2 > narg) error->all(FLERR,"Illegal set command");
@@ -757,6 +775,11 @@ void Set::set(int keyword)
     else if (keyword == VY) atom->v[i][1] = dvalue;
     else if (keyword == VZ) atom->v[i][2] = dvalue;
     else if (keyword == CHARGE) atom->q[i] = dvalue;
+
+    /* polarization stuff */
+    else if (keyword == STATIC_POLARIZABILITY) atom->static_polarizability[i] = dvalue;
+    /* end polarization stuff */
+
     else if (keyword == MASS) {
       if (dvalue <= 0.0) error->one(FLERR,"Invalid mass in set command");
       atom->rmass[i] = dvalue;

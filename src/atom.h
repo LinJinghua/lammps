@@ -166,6 +166,11 @@ class Atom : protected Pointers {
   int eff_plastic_strain_rate_flag;
   int damage_flag;
 
+  /* polarization stuff */
+  double *static_polarizability,**ef_static,**mu_induced;
+  int static_polarizability_flag;
+  /* end polarization stuff */
+
   // Peridynamics scale factor, used by dump cfg
 
   double pdscale;

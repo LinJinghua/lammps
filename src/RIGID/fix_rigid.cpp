@@ -48,8 +48,15 @@ enum{ISO,ANISO,TRICLINIC};
 #define CHUNK 1024
 #define ATTRIBUTE_PERBODY 20
 
+#if 0
 #define TOLERANCE 1.0e-6
 #define EPSILON 1.0e-7
+#else
+/* polarization stuff */
+#define TOLERANCE 1.0e-3
+#define EPSILON 1.0e-4
+/* end polarization stuff */
+#endif
 
 #define SINERTIA 0.4            // moment of inertia prefactor for sphere
 #define EINERTIA 0.2            // moment of inertia prefactor for ellipsoid

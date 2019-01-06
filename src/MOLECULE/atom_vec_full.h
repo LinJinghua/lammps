@@ -63,6 +63,11 @@ class AtomVecFull : public AtomVec {
   imageint *image;
   double **x,**v,**f;
   double *q;
+  
+  /* polarization stuff */
+  double *static_polarizability,**ef_static,**mu_induced;
+  /* end polarization stuff */
+
   tagint *molecule;
   int **nspecial;
   tagint **special;

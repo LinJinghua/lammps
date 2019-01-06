@@ -40,6 +40,10 @@ AtomVecFull::AtomVecFull(LAMMPS *lmp) : AtomVec(lmp)
   size_data_vel = 4;
   xcol_data = 5;
 
+  /* polarization stuff */
+  atom->static_polarizability_flag = 1;
+  /* end polarization stuff */
+
   atom->molecule_flag = atom->q_flag = 1;
 }
 
@@ -67,6 +71,12 @@ void AtomVecFull::grow(int n)
 
   q = memory->grow(atom->q,nmax,"atom:q");
   molecule = memory->grow(atom->molecule,nmax,"atom:molecule");
+
+  /* polarization stuff */
+  static_polarizability = memory->grow(atom->static_polarizability,nmax,"atom:static_polarizability");
+  ef_static = memory->grow(atom->ef_static,nmax,3,"atom:ef_static");
+  mu_induced = memory->grow(atom->mu_induced,nmax,3,"atom:mu_induced");
+  /* end polarization stuff */
 
   nspecial = memory->grow(atom->nspecial,nmax,3,"atom:nspecial");
   special = memory->grow(atom->special,nmax,atom->maxspecial,"atom:special");
@@ -134,6 +144,13 @@ void AtomVecFull::grow_reset()
   tag = atom->tag; type = atom->type;
   mask = atom->mask; image = atom->image;
   x = atom->x; v = atom->v; f = atom->f;
+
+  /* polarization stuff */
+  static_polarizability = atom->static_polarizability;
+  ef_static = atom->ef_static;
+  mu_induced = atom->mu_induced;
+  /* end polarization stuff */
+
   q = atom->q; molecule = atom->molecule;
   nspecial = atom->nspecial; special = atom->special;
   num_bond = atom->num_bond; bond_type = atom->bond_type;
@@ -170,6 +187,16 @@ void AtomVecFull::copy(int i, int j, int delflag)
 
   q[j] = q[i];
   molecule[j] = molecule[i];
+
+  /* polarization stuff */
+  static_polarizability[j] = static_polarizability[i];
+  ef_static[j][0] = ef_static[i][0];
+  ef_static[j][1] = ef_static[i][1];
+  ef_static[j][2] = ef_static[i][2];
+  mu_induced[j][0] = mu_induced[i][0];
+  mu_induced[j][1] = mu_induced[i][1];
+  mu_induced[j][2] = mu_induced[i][2];
+  /* end polarization stuff */
 
   num_bond[j] = num_bond[i];
   for (k = 0; k < num_bond[j]; k++) {
@@ -619,6 +646,16 @@ int AtomVecFull::pack_exchange(int i, double *buf)
   buf[m++] = q[i];
   buf[m++] = ubuf(molecule[i]).d;
 
+  /* polarization stuff */
+  buf[m++] = static_polarizability[i];
+  buf[m++] = ef_static[i][0];
+  buf[m++] = ef_static[i][1];
+  buf[m++] = ef_static[i][2];
+  buf[m++] = mu_induced[i][0];
+  buf[m++] = mu_induced[i][1];
+  buf[m++] = mu_induced[i][2];
+  /* end polarization stuff */
+
   buf[m++] = ubuf(num_bond[i]).d;
   for (k = 0; k < num_bond[i]; k++) {
     buf[m++] = ubuf(bond_type[i][k]).d;
@@ -688,6 +725,17 @@ int AtomVecFull::unpack_exchange(double *buf)
   q[nlocal] = buf[m++];
   molecule[nlocal] = (tagint) ubuf(buf[m++]).i;
 
+  /* polarization stuff */
+  static_polarizability[nlocal] = buf[m++];
+  ef_static[nlocal][0] = buf[m++];
+  ef_static[nlocal][1] = buf[m++];
+  ef_static[nlocal][2] = buf[m++];
+  mu_induced[nlocal][0] = buf[m++];
+  mu_induced[nlocal][1] = buf[m++];
+  mu_induced[nlocal][2] = buf[m++];
+  /* end polarization stuff */
+
+
   num_bond[nlocal] = (int) ubuf(buf[m++]).i;
   for (k = 0; k < num_bond[nlocal]; k++) {
     bond_type[nlocal][k] = (int) ubuf(buf[m++]).i;
@@ -747,7 +795,13 @@ int AtomVecFull::size_restart()
   int nlocal = atom->nlocal;
   int n = 0;
   for (i = 0; i < nlocal; i++)
+#if 0
     n += 17 + 2*num_bond[i] + 4*num_angle[i] +
+#else
+  /* polarization stuff */
+    n += 24 + 2*num_bond[i] + 4*num_angle[i] +
+  /* end polarization stuff */
+#endif
       5*num_dihedral[i] + 5*num_improper[i];
 
   if (atom->nextra_restart)
@@ -782,6 +836,16 @@ int AtomVecFull::pack_restart(int i, double *buf)
 
   buf[m++] = q[i];
   buf[m++] = ubuf(molecule[i]).d;
+
+  /* polarization stuff */
+  buf[m++] = static_polarizability[i];
+  buf[m++] = ef_static[i][0];
+  buf[m++] = ef_static[i][1];
+  buf[m++] = ef_static[i][2];
+  buf[m++] = mu_induced[i][0];
+  buf[m++] = mu_induced[i][1];
+  buf[m++] = mu_induced[i][2];
+  /* end polarization stuff */
 
   buf[m++] = ubuf(num_bond[i]).d;
   for (k = 0; k < num_bond[i]; k++) {
@@ -853,6 +917,16 @@ int AtomVecFull::unpack_restart(double *buf)
   q[nlocal] = buf[m++];
   molecule[nlocal] = (tagint) ubuf(buf[m++]).i;
 
+  /* polarization stuff */
+  static_polarizability[nlocal] = buf[m++];
+  ef_static[nlocal][0] = buf[m++];
+  ef_static[nlocal][1] = buf[m++];
+  ef_static[nlocal][2] = buf[m++];
+  mu_induced[nlocal][0] = buf[m++];
+  mu_induced[nlocal][1] = buf[m++];
+  mu_induced[nlocal][2] = buf[m++];
+  /* end polarization stuff */
+
   num_bond[nlocal] = (int) ubuf(buf[m++]).i;
   for (k = 0; k < num_bond[nlocal]; k++) {
     bond_type[nlocal][k] = (int) ubuf(buf[m++]).i;
@@ -921,6 +995,17 @@ void AtomVecFull::create_atom(int itype, double *coord)
 
   q[nlocal] = 0.0;
   molecule[nlocal] = 0;
+  
+  /* polarization stuff */
+  static_polarizability[nlocal] = 0.0;
+  ef_static[nlocal][0] = 0.0;
+  ef_static[nlocal][1] = 0.0;
+  ef_static[nlocal][2] = 0.0;
+  mu_induced[nlocal][0] = 0.0;
+  mu_induced[nlocal][1] = 0.0;
+  mu_induced[nlocal][2] = 0.0;
+  /* end polarization stuff */
+
   num_bond[nlocal] = 0;
   num_angle[nlocal] = 0;
   num_dihedral[nlocal] = 0;
@@ -947,6 +1032,16 @@ void AtomVecFull::data_atom(double *coord, imageint imagetmp, char **values)
     error->one(FLERR,"Invalid atom type in Atoms section of data file");
 
   q[nlocal] = atof(values[3]);
+
+  /* polarization stuff */
+  static_polarizability[nlocal] = 0.0;
+  ef_static[nlocal][0] = 0.0;
+  ef_static[nlocal][1] = 0.0;
+  ef_static[nlocal][2] = 0.0;
+  mu_induced[nlocal][0] = 0.0;
+  mu_induced[nlocal][1] = 0.0;
+  mu_induced[nlocal][2] = 0.0;
+  /* end polarization stuff */
 
   x[nlocal][0] = coord[0];
   x[nlocal][1] = coord[1];
@@ -975,6 +1070,16 @@ int AtomVecFull::data_atom_hybrid(int nlocal, char **values)
 {
   molecule[nlocal] = ATOTAGINT(values[0]);
   q[nlocal] = atof(values[1]);
+
+  /* polarization stuff */
+  static_polarizability[nlocal] = 0.0;
+  ef_static[nlocal][0] = 0.0;
+  ef_static[nlocal][1] = 0.0;
+  ef_static[nlocal][2] = 0.0;
+  mu_induced[nlocal][0] = 0.0;
+  mu_induced[nlocal][1] = 0.0;
+  mu_induced[nlocal][2] = 0.0;
+  /* end polarization stuff */
 
   num_bond[nlocal] = 0;
   num_angle[nlocal] = 0;
@@ -1057,6 +1162,12 @@ bigint AtomVecFull::memory_usage()
   if (atom->memcheck("x")) bytes += memory->usage(x,nmax,3);
   if (atom->memcheck("v")) bytes += memory->usage(v,nmax,3);
   if (atom->memcheck("f")) bytes += memory->usage(f,nmax*comm->nthreads,3);
+
+  /* polarization stuff */
+  if (atom->memcheck("static_polarizability")) bytes += memory->usage(static_polarizability,nmax);
+  if (atom->memcheck("ef_static")) bytes += memory->usage(ef_static,nmax,3);
+  if (atom->memcheck("mu_induced")) bytes += memory->usage(mu_induced,nmax,3);
+  /* end polarization stuff */
 
   if (atom->memcheck("q")) bytes += memory->usage(q,nmax);
   if (atom->memcheck("molecule")) bytes += memory->usage(molecule,nmax);

@@ -805,6 +805,12 @@ void Thermo::parse_fields(char *str)
       addfield("E_tail",&Thermo::compute_etail,FLOAT);
       index_pe = add_compute(id_pe,SCALAR);
 
+    /* polarization stuff */
+    } else if (strcmp(word,"epol") == 0) {
+      addfield("E_pol",&Thermo::compute_epol,FLOAT);
+      index_pe = add_compute(id_pe,SCALAR);
+    /* end polarization stuff */
+
     } else if (strcmp(word,"vol") == 0) {
       addfield("Volume",&Thermo::compute_vol,FLOAT);
     } else if (strcmp(word,"density") == 0) {
@@ -1303,6 +1309,16 @@ int Thermo::evaluate_keyword(char *word, double *answer)
                  "Thermo keyword in variable requires thermo to use/init pe");
     pe->invoked_flag |= INVOKED_SCALAR;
     compute_ecoul();
+
+  /* polarization stuff */
+  } else if (strcmp(word,"epol") == 0) {
+    if (update->eflag_global != update->ntimestep)
+      error->all(FLERR,"Energy was not tallied on needed timestep");
+    if (!pe)
+      error->all(FLERR,"Thermo keyword in variable requires thermo to use/init pe");
+    pe->invoked_flag |= INVOKED_SCALAR;
+    compute_epol();
+  /* end polarization stuff */
 
   } else if (strcmp(word,"epair") == 0) {
     if (update->eflag_global != update->ntimestep)
@@ -2204,3 +2220,14 @@ void Thermo::compute_cellgamma()
   }
 }
 
+/* ---------------------------------------------------------------------- */
+
+/* polarization stuff */
+void Thermo::compute_epol()
+{
+  double tmp = 0.0;
+  if (force->pair) tmp += force->pair->eng_pol;
+  MPI_Allreduce(&tmp,&dvalue,1,MPI_DOUBLE,MPI_SUM,world);
+  if (normflag) dvalue /= natoms;
+}
+/* end polarization stuff */
