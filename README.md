@@ -4,8 +4,9 @@
 ## Build & Run
 ```shell
 mkdir -p build && cd build
-cmake ../cmake/ -DPKG_MOLECULE=ON -DPKG_KSPACE=ON -DPKG_RIGID=ON
-make -j8
+cmake -DCMAKE_BUILD_TYPE=Release -DPKG_MOLECULE=ON -DPKG_KSPACE=ON -DPKG_RIGID=ON ../cmake/
+# cmake -DCMAKE_BUILD_TYPE=Debug -DPKG_MOLECULE=ON -DPKG_KSPACE=ON -DPKG_RIGID=ON ../cmake/
+make
 ```
 
 ## Acknowledgements

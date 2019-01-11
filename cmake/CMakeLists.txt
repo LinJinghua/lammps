@@ -1464,6 +1464,15 @@ endforeach()
 get_directory_property(CPPFLAGS DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS)
 include(FeatureSummary)
 feature_summary(DESCRIPTION "The following packages have been found:" WHAT PACKAGES_FOUND)
+
+message(STATUS "<<< Include configuration >>>")
+get_property(include_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+# foreach(dir ${include_dirs})
+  # message(STATUS "dir='${dir}'")
+# endforeach()
+message(STATUS "${include_dirs}")
+message(STATUS "-----------------------------")
+
 message(STATUS "<<< Build configuration >>>
    Build type       ${CMAKE_BUILD_TYPE}
    Install path     ${CMAKE_INSTALL_PREFIX}
