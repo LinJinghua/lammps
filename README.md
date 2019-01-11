@@ -9,15 +9,17 @@
 ##### cmake
 ```shell
 mkdir -p build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DPKG_MOLECULE=ON -DPKG_KSPACE=ON -DPKG_RIGID=ON -DPKG_USER-POLAR=ON ../cmake/
-# cmake -DCMAKE_BUILD_TYPE=Debug -DPKG_MOLECULE=ON -DPKG_KSPACE=ON -DPKG_RIGID=ON -DPKG_USER-POLAR=ON ../cmake/
+# Disable package 'MOLECULE'(Conflict with atom_vec_full)
+cmake -DCMAKE_BUILD_TYPE=Release -DPKG_MOLECULE=OFF -DPKG_KSPACE=ON -DPKG_RIGID=ON -DPKG_USER-POLAR=ON ../cmake/
+# cmake -DCMAKE_BUILD_TYPE=Debug -DPKG_MOLECULE=OFF -DPKG_KSPACE=ON -DPKG_RIGID=ON -DPKG_USER-POLAR=ON ../cmake/
 make
 ```
 
 ##### make
 ```
 cd src
-make yes-molecule yes-kspace yes-rigid yes-user-polar
+make no-molecule
+make yes-kspace yes-rigid yes-user-polar
 make serial
 # make no-molecule no-kspace no-rigid no-user-polar
 ```
