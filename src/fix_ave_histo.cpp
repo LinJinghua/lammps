@@ -13,7 +13,11 @@
 
 #include <cstdlib>
 #include <cstring>
+#ifdef _MSC_VER
+#include <unistd_win.h>
+#else
 #include <unistd.h>
+#endif /* _MSC_VER */
 #include "fix_ave_histo.h"
 #include "atom.h"
 #include "update.h"

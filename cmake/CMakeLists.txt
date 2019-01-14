@@ -749,7 +749,11 @@ endif()
 
 # the windows version of LAMMPS requires a couple extra libraries
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  list(APPEND LAMMPS_LINK_LIBS wsock32.lib psapi.lib)
+else()
   list(APPEND LAMMPS_LINK_LIBS -lwsock32 -lpsapi)
+endif()
 endif()
 
 ########################################################################
@@ -776,7 +780,9 @@ endif()
 #    message(FATAL_ERROR "Could not find needed math function - ${FUNC}")
 #  endif(NOT FOUND_${FUNC}_${MATH_LIBRARIES})
 #endforeach(FUNC)
-list(APPEND LAMMPS_LINK_LIBS ${MATH_LIBRARIES})
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  list(APPEND LAMMPS_LINK_LIBS ${MATH_LIBRARIES})
+endif()
 
 ######################################
 # Generate Basic Style files

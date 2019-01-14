@@ -13,7 +13,11 @@
 
 #include <cstring>
 #include <cstdlib>
+#ifdef _MSC_VER
+#include <unistd_win.h>
+#else
 #include <unistd.h>
+#endif /* _MSC_VER */
 #include "write_coeff.h"
 #include "pair.h"
 #include "bond.h"

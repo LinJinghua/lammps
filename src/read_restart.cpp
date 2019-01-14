@@ -14,7 +14,11 @@
 #include <mpi.h>
 #include <cstring>
 #include <cstdlib>
+#ifdef _MSC_VER
+#include "dirent_win.h"
+#else
 #include <dirent.h>
+#endif /* _MSC_VER */
 #include "read_restart.h"
 #include "atom.h"
 #include "atom_vec.h"

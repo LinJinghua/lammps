@@ -15,7 +15,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
+#ifdef _MSC_VER
+// #include <unistd_win.h>
+#define ATOM ATOM_LAMMPS
+void usleep(__int64);
+#else
 #include <unistd.h>
+#endif /* _MSC_VER */
 #include "variable.h"
 #include "universe.h"
 #include "atom.h"
@@ -5100,3 +5106,22 @@ int VarReader::read_peratom()
 
   return 0;
 }
+
+#ifdef _MSC_VER
+#undef ATOM
+#include <Windows.h>
+// #include <WinBase.h>
+// #include <winnt.h>
+// #include <synchapi.h>
+void usleep(__int64 usec) {
+    HANDLE timer;
+    LARGE_INTEGER ft;
+
+    ft.QuadPart = -(10 * usec); // Convert to 100 nanosecond interval, negative value indicates relative time
+
+    timer = CreateWaitableTimer(NULL, TRUE, NULL);
+    SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+    WaitForSingleObject(timer, INFINITE);
+    CloseHandle(timer);
+}
+#endif /* _MSC_VER */

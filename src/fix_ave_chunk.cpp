@@ -13,7 +13,12 @@
 
 #include <cstdlib>
 #include <cstring>
+#ifdef _MSC_VER
+#include <unistd_win.h>
+#define ATOM ATOM_LAMMPS
+#else
 #include <unistd.h>
+#endif /* _MSC_VER */
 #include "fix_ave_chunk.h"
 #include "atom.h"
 #include "update.h"

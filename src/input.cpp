@@ -17,7 +17,11 @@
 #include <cstring>
 #include <errno.h>
 #include <cctype>
+#ifdef _MSC_VER
+#include <unistd_win.h>
+#else
 #include <unistd.h>
+#endif /* _MSC_VER */
 #include <sys/stat.h>
 #include "input.h"
 #include "style_command.h"

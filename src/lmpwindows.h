@@ -1,12 +1,16 @@
 #include <ciso646>
 #if !defined(__MINGW32__)
+#ifndef _MSC_VER
 #include "erf.h"
+#endif /* _MSC_VER */
 #endif
 #include <direct.h>
 #include <cmath>
 // LAMMPS uses usleep with 100 ms arguments, no microsecond precision needed
 #if !defined(__MINGW32__)
+#ifndef _MSC_VER
 #include "sleep.h"
+#endif /* _MSC_VER */
 #endif
 
 // some symbols have different names in Windows
