@@ -163,7 +163,7 @@ READ_ITEM:
 
     float version;
     int reference,replace;
-    char atom_types[5][5];
+    char atom_types[6][5];
     double parameters[8];
 
     /* version number and reference number */
