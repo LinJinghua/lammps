@@ -1,22 +1,23 @@
 
 TARGET	 = msi2lmp.exe
 
-SRCS     = msi2lmp.c \
-           ReadCarFile.c \
-           ReadMdfFile.c \
-	   MakeLists.c \
-           ReadFrcFile.c \
-           InitializeItems.c \
-	   SearchAndFill.c \
-           GetParameters.c \
-	   CheckLists.c \
-           WriteDataFile.c
+SRCS     = msi2lmp.cpp \
+           ReadCarFile.cpp \
+           ReadMdfFile.cpp \
+           ReadPrmFile.cpp \
+	   MakeLists.cpp \
+           ReadFrcFile.cpp \
+           InitializeItems.cpp \
+	   SearchAndFill.cpp \
+           GetParameters.cpp \
+	   CheckLists.cpp \
+           WriteDataFile.cpp
 
-OBJS     = $(SRCS:.c=.o)
+OBJS     = $(SRCS:.cpp=.o)
 
-HEADERS  = msi2lmp.h Forcefield.h
+HEADERS  = msi2lmp.h Forcefield.h PrmData.h
 
-CC       = gcc
+CC       = g++
 CFLAGS   = -O -Wall -W -g 
 LDFLAGS  =
 FRCFILE  = cvff.frc
@@ -27,19 +28,20 @@ MKFILE   = Makefile
 $(TARGET) : $(OBJS)
 	$(CC) $(LDFLAGS) $(CFLAGS) -o $(TARGET) $(OBJS) -lm
 
-.c.o:
+.cpp.o:
 	$(CC) $(CFLAGS) -c $<
 clean:
 	rm -f $(OBJS) $(TARGET)
 
 # dependencies
-CheckLists.o: CheckLists.c msi2lmp.h
-GetParameters.o: GetParameters.c msi2lmp.h Forcefield.h
-InitializeItems.o: InitializeItems.c msi2lmp.h Forcefield.h
-MakeLists.o: MakeLists.c msi2lmp.h
-msi2lmp.o: msi2lmp.c msi2lmp.h
-ReadCarFile.o: ReadCarFile.c msi2lmp.h
-ReadFrcFile.o: ReadFrcFile.c msi2lmp.h Forcefield.h
-ReadMdfFile.o: ReadMdfFile.c msi2lmp.h
-SearchAndFill.o: SearchAndFill.c msi2lmp.h Forcefield.h
-WriteDataFile.o: WriteDataFile.c msi2lmp.h Forcefield.h
+CheckLists.o: CheckLists.cpp msi2lmp.h
+GetParameters.o: GetParameters.cpp msi2lmp.h Forcefield.h
+InitializeItems.o: InitializeItems.cpp msi2lmp.h Forcefield.h
+MakeLists.o: MakeLists.cpp msi2lmp.h
+msi2lmp.o: msi2lmp.cpp msi2lmp.h
+ReadCarFile.o: ReadCarFile.cpp msi2lmp.h
+ReadFrcFile.o: ReadFrcFile.cpp msi2lmp.h Forcefield.h
+ReadMdfFile.o: ReadMdfFile.cpp msi2lmp.h
+ReadPrmFile.o: ReadPrmFile.cpp msi2lmp.h PrmData.h
+SearchAndFill.o: SearchAndFill.cpp msi2lmp.h Forcefield.h
+WriteDataFile.o: WriteDataFile.cpp msi2lmp.h Forcefield.h
