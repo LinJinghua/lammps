@@ -1,0 +1,6 @@
+# cmake
+/build*
+
+# run test output file
+/test/*.data
+/test/log.*
