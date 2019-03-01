@@ -148,6 +148,7 @@
 */
 
 #include "msi2lmp.h"
+#include "PrmData.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -384,6 +385,9 @@ int main (int argc, char *argv[])
   /*Read in .mdf file */
 
   ReadMdfFile();
+
+  /*Read in .prm file */
+  ReadPrmFile();
 
   /* Define bonds, angles, etc...*/
 
