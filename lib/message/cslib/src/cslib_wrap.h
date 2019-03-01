@@ -16,6 +16,14 @@
    ifdefs allow this file to be included in a C program
 */
 
+#ifdef _MSC_VER
+#ifdef __cplusplus
+#include <cstdint>
+#else
+#include <stdint.h>
+#endif
+#endif /* _MSC_VER */
+
 #ifdef __cplusplus
 extern "C" {
 #endif

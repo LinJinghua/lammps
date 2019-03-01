@@ -18,6 +18,10 @@ endif()
 
 # To avoid conflicts with the conventional Makefile build system, we build everything here
 file(GLOB LIB_SOURCES ${LAMMPS_SOURCE_DIR}/[^.]*.cpp)
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  file(GLOB MSVC_SOURCES ${LAMMPS_LIB_SOURCE_DIR}/msvc/[^.]*.cpp)
+  list(APPEND LIB_SOURCES ${MSVC_SOURCES})
+endif()
 file(GLOB LMP_SOURCES ${LAMMPS_SOURCE_DIR}/main.cpp)
 list(REMOVE_ITEM LIB_SOURCES ${LMP_SOURCES})
 
@@ -200,6 +204,9 @@ if(PKG_USER-H5MD OR PKG_USER-QMMM OR PKG_USER-SCAFACOS)
 endif()
 
 include_directories(${LAMMPS_SOURCE_DIR})
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  include_directories(${LAMMPS_LIB_SOURCE_DIR}/msvc)
+endif()
 
 # do MPI detection after language activation, if MPI for these language is required
 find_package(MPI QUIET)
@@ -215,6 +222,7 @@ if(BUILD_MPI)
 else()
   enable_language(C)
   file(GLOB MPI_SOURCES ${LAMMPS_SOURCE_DIR}/STUBS/mpi.c)
+  # list(APPEND MPI_SOURCES ${LAMMPS_LIB_SOURCE_DIR}/msvc/sys/time.h)
   add_library(mpi_stubs STATIC ${MPI_SOURCES})
   include_directories(${LAMMPS_SOURCE_DIR}/STUBS)
   list(APPEND LAMMPS_LINK_LIBS mpi_stubs)
@@ -687,6 +695,10 @@ if(PKG_MESSAGE)
     set_target_properties(cslib PROPERTIES OUTPUT_NAME "csmpi")
   else()
     target_compile_definitions(cslib PRIVATE -DMPI_NO)
+    get_property(cslib_include_dirs TARGET cslib PROPERTY INCLUDE_DIRECTORIES)
+    list(REMOVE_ITEM cslib_include_dirs ${LAMMPS_SOURCE_DIR}/STUBS)
+    set_property(TARGET cslib PROPERTY INCLUDE_DIRECTORIES ${cslib_include_dirs})
+    target_include_directories(cslib PRIVATE ${LAMMPS_LIB_SOURCE_DIR}/message/cslib/src/STUBS_MPI)
     set_target_properties(cslib PROPERTIES OUTPUT_NAME "csnompi")
   endif()
 
@@ -749,7 +761,11 @@ endif()
 
 # the windows version of LAMMPS requires a couple extra libraries
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  list(APPEND LAMMPS_LINK_LIBS wsock32.lib psapi.lib)
+else()
   list(APPEND LAMMPS_LINK_LIBS -lwsock32 -lpsapi)
+endif()
 endif()
 
 ########################################################################
@@ -776,7 +792,11 @@ endif()
 #    message(FATAL_ERROR "Could not find needed math function - ${FUNC}")
 #  endif(NOT FOUND_${FUNC}_${MATH_LIBRARIES})
 #endforeach(FUNC)
-list(APPEND LAMMPS_LINK_LIBS ${MATH_LIBRARIES})
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  add_definitions(-D_USE_MATH_DEFINES)  # define M_PI
+else()
+  list(APPEND LAMMPS_LINK_LIBS ${MATH_LIBRARIES})
+endif()
 
 ######################################
 # Generate Basic Style files

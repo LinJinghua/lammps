@@ -2,6 +2,11 @@
 #ifndef LMP_OPENMP_SNAP_H
 #define LMP_OPENMP_SNAP_H
 
+#if defined(_MSC_VER) && defined(_OPENMP)
+#undef _OPENMP
+#define _MSC_OPENMP
+#endif
+
 #if defined(_OPENMP)
 #include <omp.h>
 #else
@@ -11,6 +16,11 @@ inline int omp_set_num_threads(int num_threads) {return 1;}
 /* inline int __sync_fetch_and_add(int* ptr, int value) {int tmp = *ptr; ptr[0]+=value; return tmp;} */
 inline void omp_set_schedule(omp_sched_t schedule,int modifier=1) {}
 inline int omp_in_parallel() {return 0;}
+#endif
+
+#ifdef _MSC_OPENMP
+// #define _OPENMP
+#undef _MSC_OPENMP
 #endif
 
 #endif
