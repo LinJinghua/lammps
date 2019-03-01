@@ -61,7 +61,11 @@ void SearchAndFill(struct FrcFieldItem *item)
   int i,j;  /* counters */
   int got_it = 0;
   int ctr = 0;
+#ifdef ORIGINAL_CODE
   long file_pos;
+#else
+  long keyword_pos[100];
+#endif // ORIGINAL_CODE
   char line[MAX_LINE_LENGTH] = "empty";
   char *charptr,*status;
 
@@ -70,26 +74,52 @@ void SearchAndFill(struct FrcFieldItem *item)
   /* Read and discard lines until keyword is found */
 
   rewind(FrcF);
+#ifdef ORIGINAL_CODE
   while (got_it == 0) {
+#else
+  while (1) {
+#endif // ORIGINAL_CODE
     status = fgets( line, MAX_LINE_LENGTH, FrcF );
     if (status == NULL) {
+#ifndef ORIGINAL_CODE
+      if (got_it) break;
+#endif // ORIGINAL_CODE
       fprintf(stderr," Unable to find keyword '%s'\n",item->keyword);
       fprintf(stderr," Check consistency of forcefield name and class \n");
       fprintf(stderr," Exiting....\n");
       exit(1);
     }
     if (line[0] == '#') {
+#ifdef ORIGINAL_CODE
       if (string_match(strtok(line," '\t\r\n("),item->keyword)) got_it = 1;
+#else
+      if (string_match(strtok(line," '\t\r\n("),item->keyword)) {
+        keyword_pos[got_it++] = ftell(FrcF);
+      }
+#endif // ORIGINAL_CODE
     }
     /*     if (strncmp(line, item->keyword,strlen(item->keyword))==0) got_it = 1; */
   }
 
+#ifdef ORIGINAL_CODE
   file_pos = ftell(FrcF);
+#else
+  int keyword_pos_iter = 0;
+COUNT_CTR:
+  fseek(FrcF, keyword_pos[keyword_pos_iter], SEEK_SET);
+#endif // ORIGINAL_CODE
 
   /* Count the number of lines until next item is found */
 
   while( strncmp(fgets(line,MAX_LINE_LENGTH,FrcF), "#", 1) != 0 )
     ctr++;
+
+#ifndef ORIGINAL_CODE
+  if (++keyword_pos_iter < got_it)
+    goto COUNT_CTR;
+  else
+    keyword_pos_iter = 0;
+#endif // ORIGINAL_CODE
 
   /* Allocate the memory using calloc */
 
@@ -103,13 +133,19 @@ void SearchAndFill(struct FrcFieldItem *item)
   /********************FILL PARAMETERS AND EQUIVALENCES ********************/
 
   /* Read lines until keyword is found */
-
+#ifdef ORIGINAL_CODE
   fseek(FrcF,file_pos,SEEK_SET);
   strcpy(line,"empty");
+#endif // ORIGINAL_CODE
 
   /* Read lines until data starts (when !--- is found) */
 
   ctr = 0;
+
+#ifndef ORIGINAL_CODE
+READ_ITEM:
+  fseek(FrcF, keyword_pos[keyword_pos_iter], SEEK_SET);
+#endif // ORIGINAL_CODE
   while ( strncmp(line,"!---", 4) != 0 ) {
     fgets(line, MAX_LINE_LENGTH, FrcF);
   }
@@ -228,6 +264,12 @@ void SearchAndFill(struct FrcFieldItem *item)
       if (status == NULL) break;
     }
   }
+#ifndef ORIGINAL_CODE
+  if (++keyword_pos_iter < got_it) {
+    // fprintf(stderr, "Item %s : %d %d\n", item->keyword, got_it, ctr);
+    goto READ_ITEM;
+  }
+#endif // ORIGINAL_CODE
   item->entries = ctr;
 
   /*Debugging

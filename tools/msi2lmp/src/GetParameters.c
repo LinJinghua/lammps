@@ -1028,6 +1028,14 @@ int find_angleangle_data(char types1[][5],struct FrcFieldItem item,int kloc[3])
   }
   kloc[0] = k;
 
+#ifndef ORIGINAL_CODE
+  /* Here `backwards == 0 || backwards == 1`, but `backwards != -1` .
+   * But `backwards` is initialize to `-1` at the beginning of function.
+   * Also appear at the beginning of `find_trigonal_body_data` function.
+   * But `find_trigonal_body_data` will return when `find_match` modify `backwards`.
+   */
+#endif // ORIGINAL_CODE
+
   /* go for second parameter d b a c or c b a d */
 
   strncpy(mirror_types[0],types1[3],5);
@@ -1306,5 +1314,8 @@ int find_equiv_type(char potential_type[5])
   }
   if (j < 0)
     printf(" Unable to find equivalent type for %s\n",potential_type);
+#ifndef ORIGINAL_CODE
+  if (j < 0) condexit(117);
+#endif // ORIGINAL_CODE
   return j;
 }

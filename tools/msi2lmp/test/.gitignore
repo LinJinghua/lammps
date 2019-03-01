@@ -1,0 +1,3 @@
+# run test output file
+*.data
+log.*
