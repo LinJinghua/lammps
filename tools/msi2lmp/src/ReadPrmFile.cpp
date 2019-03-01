@@ -59,7 +59,14 @@ ALIAS_TEMPLATE_FUNCTION(get_line, get_line_, 0)
 
 const char* skip_blank(const char* str) {
     while (*str && std::isspace(static_cast<unsigned char>(*str))) {
-      ++str;
+        ++str;
+    }
+    return str;
+}
+
+const char* find_blank(const char* str) {
+    while (*str && !std::isspace(static_cast<unsigned char>(*str))) {
+        ++str;
     }
     return str;
 }
@@ -86,10 +93,41 @@ const char* get_alpha_line(FILE* fp) {
         // printf("skip %d %s\n", _file_line_global, buf);
     // } while (buf && !is_alpha(buf));
     } while (buf && is_comment(buf));
-    printf("skip %d %s\n", _file_line_global, buf);
+    // printf("skip %d %s\n", _file_line_global, buf);
     return buf;
 }
 
+template <int NType, int NParam>
+const char* get_parameter(FILE* fp, std::vector<Parameter>& vec) {
+    while (1) {
+        const char* _buf = get_alpha_line(fp), *buf = _buf;
+        if (buf == NULL) {
+            return buf;
+        }
+        vec.emplace_back();
+        Parameter& data = vec.back();
+        for (int i = 0; i < NType; ++i) {
+            if (*buf == '\0') {
+                vec.pop_back();
+                return _buf;
+            }
+            const char* start = skip_blank(buf);
+            buf = find_blank(start);
+            data.type[i].assign(start, buf - start);
+        }
+        for (int i = 0; i < NParam; ++i) {
+            char* end;
+            data.param[i] = strtod(buf, &end);
+            if (end == buf) {
+                vec.pop_back();
+                return _buf;
+            }
+            buf = end;
+        }
+    }
+}
+
+#ifdef USING_MARCO
 #define GET_PARAMETER_FUNC(func, vec, format, type_n, param_n, ...)     \
 const char* get_ ## func (FILE* fp) {                                   \
     char type_id[type_n][MAX_LINE_TYPE_C];                              \
@@ -120,10 +158,23 @@ GET_PARAMETER_FUNC(dihedral, _prm_data_global.dihedral, "%255s%255s%255s%255s%lf
 GET_PARAMETER_FUNC(improper, _prm_data_global.improper, "%255s%255s%255s%255s%lf%lf",
     4, 2, type_id, type_id + 1, type_id + 2, type_id + 3, param, param + 1);
 
+#else
+
+#define GET_PARAMETER_FUNC(func, vec, type_n, param_n)                  \
+inline const char* get_ ## func (FILE* fp) {                            \
+    return get_parameter<type_n, param_n>(fp, vec);                     \
+}
+
+GET_PARAMETER_FUNC(bond, _prm_data_global.bond, 2, 2);
+GET_PARAMETER_FUNC(angle, _prm_data_global.angle, 3, 2);
+GET_PARAMETER_FUNC(dihedral, _prm_data_global.dihedral, 4, 3);
+GET_PARAMETER_FUNC(improper, _prm_data_global.improper, 4, 2);
+
+#endif // USING_MARCO
 
 FILE* get_file(const char* filename, const char* mode) {
     FILE* fp = fopen(filename, mode);
-    if(!fp) {
+    if (!fp) {
         perror("File opening failed");
         exit(EXIT_FAILURE);
         // return NULL;
@@ -175,9 +226,9 @@ int process(FILE* fp) {
         }
     }
 
-    if (1) {
+#ifdef DEBUG_ReadPrmFile
         print_prm_data();
-    }
+#endif // DEBUG_ReadPrmFile
 
     return 0;
 }
@@ -189,3 +240,8 @@ void ReadPrmFile() {
         fclose(fp);
     }
 }
+
+#undef MAX_LINE_C
+#undef MAX_LINE_TYPE_C
+#undef ALIAS_TEMPLATE_FUNCTION
+#undef GET_PARAMETER_FUNC
