@@ -1,6 +1,7 @@
 
 #include "msi2lmp.h"
 #include "Forcefield.h"
+#include "PrmData.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -44,7 +45,11 @@ void GetParameters()
 
   for (i=0; i < no_atom_types; i++) {
     backwards = -1;
-    strncpy(potential_types[0],atomtypes[i].potential,5);
+    if (PrmData::_prm_data.atom[i].size()) {
+        strncpy(potential_types[0], PrmData::_prm_data.atom[i].c_str(), 5);
+    } else {
+        strncpy(potential_types[0],atomtypes[i].potential,5);
+    }
     k = find_match(1,potential_types,ff_atomtypes,&backwards);
     if (k < 0) {
       printf(" Unable to find mass for %s\n",atomtypes[i].potential);
@@ -63,7 +68,11 @@ void GetParameters()
   for (i=0; i < no_atom_types; i++) {
     backwards = 0;
     for (j=0; j < 2; j++) atomtypes[i].params[j] = 0.0;
-    strncpy(potential_types[0],atomtypes[i].potential,5);
+    if (PrmData::_prm_data.atom[i].size()) {
+        strncpy(potential_types[0], PrmData::_prm_data.atom[i].c_str(), 5);
+    } else {
+        strncpy(potential_types[0], atomtypes[i].potential, 5);
+    }
     k = find_match(1,potential_types,ff_vdw,&backwards);
     if (k < 0) {
       get_equivs(1,potential_types,equiv_types);
@@ -117,6 +126,9 @@ void GetParameters()
     for (j=0; j < 2; j++)
       strncpy(potential_types[j],
               atomtypes[bondtypes[i].types[j]].potential,5);
+    if (PrmData::BondParameter::set_parameter(potential_types, bondtypes[i].params)) {
+        continue;
+    }
     k = find_match(2,potential_types,ff_bond,&backwards);
     if (k < 0) {
       get_equivs(2,potential_types,equiv_types);
@@ -173,6 +185,17 @@ void GetParameters()
     for (j=0; j < 4; j++) angletypes[i].params[j] = 0.0;
     for (j=0; j < 3; j++)
       strncpy(potential_types[j],atomtypes[angletypes[i].types[j]].potential,5);
+
+    if (PrmData::AngleParameter::set_parameter(potential_types, angletypes[i].params)) {
+        continue;
+    } else {
+        // continue;
+    }
+    for (j = 0; j < 3; j++)
+        strncpy(potential_types[j],
+                PrmData::get_raw_type(atomtypes[angletypes[i].types[j]].potential).c_str(),
+                5);
+
     k = find_match(3,potential_types,ff_ang,&backwards);
     if (k < 0) {
       get_equivs(3,potential_types,equiv_types);
@@ -297,6 +320,17 @@ void GetParameters()
     for (j=0; j < 4; j++)
       strncpy(potential_types[j],
               atomtypes[dihedraltypes[i].types[j]].potential,5);
+
+    if (PrmData::DihedralParameter::set_parameter(potential_types, angletypes[i].params)) {
+        continue;
+    } else {
+        // continue;
+    }
+    for (j = 0; j < 4; j++)
+        strncpy(potential_types[j],
+                PrmData::get_raw_type(atomtypes[dihedraltypes[i].types[j]].potential).c_str(),
+                5);
+
     backwards = 0;
     k = find_match(4,potential_types,ff_tor,&backwards);
 
@@ -616,6 +650,16 @@ void GetParameters()
       for (j=0; j < 4; j++)
         strncpy(potential_types[j],
                 atomtypes[ooptypes[i].types[j]].potential,5);
+
+      if (PrmData::ImproperParameter::set_parameter(potential_types, angletypes[i].params)) {
+          continue;
+      } else {
+          // continue;
+      }
+      for (j = 0; j < 4; j++)
+          strncpy(potential_types[j],
+                  PrmData::get_raw_type(atomtypes[ooptypes[i].types[j]].potential).c_str(),
+                  5);
 
       k = find_improper_body_data(potential_types,ff_oop,&rearrange);
       if (k < 0) {

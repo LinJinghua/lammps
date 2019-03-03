@@ -35,7 +35,7 @@ inline auto identifier(T&&... t) {                                  \
     return function_name<__VA_ARGS__>(std::forward<T>(t)...);       \
 }
 
-PrmData _prm_data_global;
+PrmData PrmData::_prm_data;
 
 static int _file_line_global = 0;
 
@@ -103,8 +103,10 @@ const char* get_alpha_line(FILE* fp) {
     return buf;
 }
 
-template <int NType, int NParam>
-const char* get_parameter(FILE* fp, PrmData::parameter_map& vec) {
+template <int TypeId>
+const char* get_parameter(FILE* fp) {
+    const int NType = PrmData::ParameterType<TypeId>::type::NType;
+    const int NParam = PrmData::ParameterType<TypeId>::type::NParam;
     while (1) {
         const char* _buf = get_alpha_line(fp), *buf = _buf;
         if (buf == NULL) {
@@ -121,7 +123,7 @@ const char* get_parameter(FILE* fp, PrmData::parameter_map& vec) {
             types[i].assign(start, buf - start);
         }
 
-        Parameter param;
+        typename PrmData::ParameterType<TypeId>::type param;
         for (int i = 0; i < NParam; ++i) {
             char* end;
             param.param[i] = strtod(buf, &end);
@@ -135,6 +137,7 @@ const char* get_parameter(FILE* fp, PrmData::parameter_map& vec) {
             types[i] = TypeKey::get_replace_type(types[i]);
         }
         TypeKey key(types);
+        auto& vec = PrmData::_prm_data.get_map<TypeId>();
         if (vec.count(key)) {
             fprintf(stdout, "[Warning] line repeated(same keys), using new line: %s", _buf);
         }
@@ -142,50 +145,15 @@ const char* get_parameter(FILE* fp, PrmData::parameter_map& vec) {
     }
 }
 
-#ifdef USING_MARCO
-#define GET_PARAMETER_FUNC(func, vec, format, type_n, param_n, ...)     \
-const char* get_ ## func (FILE* fp) {                                   \
-    char type_id[type_n][MAX_LINE_TYPE_C];                              \
-    double param[param_n];                                              \
-    while (1) {                                                         \
-        const char* buf = get_alpha_line(fp);                           \
-        if (buf == NULL ||                                              \
-            sscanf(buf, format, __VA_ARGS__) != (type_n + param_n)) {   \
-            return buf;                                                 \
-        }                                                               \
-        vec.emplace_back();                                             \
-        Parameter& data = vec.back();                                   \
-        for (int i = 0; i < type_n; ++i) {                              \
-            data.type[i] = type_id[i];                                  \
-        }                                                               \
-        for (int i = 0; i < param_n; ++i) {                             \
-            data.param[i] = param[i];                                   \
-        }                                                               \
-    }                                                                   \
+#define GET_PARAMETER_FUNC(func, id)                                    \
+inline auto get_ ## func (FILE* fp) {                                   \
+    return get_parameter<id>(fp);                                       \
 }
 
-GET_PARAMETER_FUNC(bond, _prm_data_global.bond, "%255s%255s%lf%lf",
-    2, 2, type_id, type_id + 1, param, param + 1);
-GET_PARAMETER_FUNC(angle, _prm_data_global.angle, "%255s%255s%255s%lf%lf",
-    3, 2, type_id, type_id + 1, type_id + 2, param, param + 1);
-GET_PARAMETER_FUNC(dihedral, _prm_data_global.dihedral, "%255s%255s%255s%255s%lf%lf%lf",
-    4, 3, type_id, type_id + 1, type_id + 2, type_id + 3, param, param + 1, param + 2);
-GET_PARAMETER_FUNC(improper, _prm_data_global.improper, "%255s%255s%255s%255s%lf%lf",
-    4, 2, type_id, type_id + 1, type_id + 2, type_id + 3, param, param + 1);
-
-#else
-
-#define GET_PARAMETER_FUNC(func, vec, type_n, param_n)                  \
-inline const char* get_ ## func (FILE* fp) {                            \
-    return get_parameter<type_n, param_n>(fp, vec);                     \
-}
-
-GET_PARAMETER_FUNC(bond, _prm_data_global.bond, 2, 2);
-GET_PARAMETER_FUNC(angle, _prm_data_global.angle, 3, 2);
-GET_PARAMETER_FUNC(dihedral, _prm_data_global.dihedral, 4, 3);
-GET_PARAMETER_FUNC(improper, _prm_data_global.improper, 4, 2);
-
-#endif // USING_MARCO
+GET_PARAMETER_FUNC(bond, PrmData::BOND_ID);
+GET_PARAMETER_FUNC(angle, PrmData::ANGLE_ID);
+GET_PARAMETER_FUNC(dihedral, PrmData::DIHEDRAL_ID);
+GET_PARAMETER_FUNC(improper, PrmData::IMPROPER_ID);
 
 FILE* get_file(const char* filename, const char* mode) {
     FILE* fp = fopen(filename, mode);
@@ -197,12 +165,15 @@ FILE* get_file(const char* filename, const char* mode) {
     return fp;
 }
 
-void print_prm_data(const char* id, const PrmData::parameter_map& vec,
-                    int param_n) {
+template <int TypeId>
+void print_prm_data(const char* id) {
+    const int NParam = PrmData::ParameterType<TypeId>::type::NParam;
+
+    auto& vec = PrmData::_prm_data.get_map<TypeId>();
     fprintf(stdout, "[PrmData] %s %d\n", id, static_cast<int>(vec.size()));
     for (const auto& i : vec) {
         fprintf(stdout, "%16s\t", i.first.types.c_str());
-        for (int j = 0; j < param_n; ++j) {
+        for (int j = 0; j < NParam; ++j) {
             fprintf(stdout, "%10lf\t", i.second.param[j]);
         }
         fprintf(stdout, "\n");
@@ -210,10 +181,10 @@ void print_prm_data(const char* id, const PrmData::parameter_map& vec,
 }
 
 void print_prm_data() {
-    print_prm_data("BONDS", _prm_data_global.bond, 2);
-    print_prm_data("ANGLES", _prm_data_global.angle, 2);
-    print_prm_data("DIHEDRALS", _prm_data_global.dihedral, 3);
-    print_prm_data("IMPROPER", _prm_data_global.improper, 2);
+    print_prm_data<PrmData::BOND_ID>("BONDS");
+    print_prm_data<PrmData::ANGLE_ID>("ANGLES");
+    print_prm_data<PrmData::DIHEDRAL_ID>("DIHEDRALS");
+    print_prm_data<PrmData::IMPROPER_ID>("IMPROPER");
 }
 
 int get_prm_data(FILE* fp) {
@@ -247,17 +218,16 @@ int get_prm_data(FILE* fp) {
 
 std::string TypeKey::get_replace_type(const std::string& type) {
     static int id = 0;
-    static std::unordered_map<std::string, std::string> replace;
-    if (replace.count(type) == 0) {
+    if (PrmData::_prm_data.replace.count(type) == 0) {
         std::string replace_type = TypeKey::delimiter + std::to_string(++id);
         // sizeof(atom.potential) == 6
         if (replace_type.size() >= sizeof(Atom{}.potential)) {
             fprintf(stderr, "the type of atom should < %d\n", id);
             exit(118);
         }
-        replace[type] = replace_type;
+        PrmData::_prm_data.replace[type] = replace_type;
     }
-    return replace[type];
+    return PrmData::_prm_data.replace[type];
 }
 
 const char* is_replace_type(const Atom& atom) {
@@ -290,12 +260,21 @@ const char* is_replace_type(const Atom& atom) {
 }
 
 int replace_atom_type() {
+    PrmData::_prm_data.atom.resize(total_no_atoms);
     for (int i = 0; i < total_no_atoms; ++i) {
         Atom& atom = atoms[i];
         const char* type_str = is_replace_type(atom);
         if (type_str) {
             std::string type = TypeKey::get_replace_type(type_str);
-            _prm_data_global.replace[type] = atom.potential;
+            PrmData::_prm_data.atom[i] = atom.potential;
+            if (PrmData::_prm_data.potential.count(type)) {
+                if (PrmData::_prm_data.potential[type] != atom.potential) {
+                    fprintf(stdout, "[Warning]: diff type. %s <- %s, %s\n",
+                            type.c_str(), atom.potential, PrmData::_prm_data.potential[type].c_str());
+                }
+            } else {
+                PrmData::_prm_data.potential[type] = atom.potential;
+            }
 #if defined(DEBUG_ReadPrmFile)
             fprintf(stdout, "[replace] %8s -> %8s(%s)\n", atom.potential, type_str, type.c_str());
 #endif // DEBUG_ReadPrmFile

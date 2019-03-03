@@ -5,6 +5,7 @@ PROJECT(msi2lmp
 )
 
 # set(CMAKE_VERBOSE_MAKEFILE ON)
+SET(CMAKE_CXX_STANDARD 17)
 
 aux_source_directory(
     ${CMAKE_CURRENT_LIST_DIR}/src
