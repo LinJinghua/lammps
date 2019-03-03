@@ -18,7 +18,7 @@ OBJS     = $(SRCS:.cpp=.o)
 HEADERS  = msi2lmp.h Forcefield.h PrmData.h
 
 CC       = g++
-CFLAGS   = -O -Wall -W -g 
+CFLAGS   = -O -Wall -W -g -std=c++1z
 LDFLAGS  =
 FRCFILE  = cvff.frc
 FRCFILE2 = cff91.frc
