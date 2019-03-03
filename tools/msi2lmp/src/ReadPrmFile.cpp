@@ -15,6 +15,12 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_map>
+
+#if defined(_DEBUG)
+#define DEBUG_ReadPrmFile
+#endif // _DEBUG
+
 
 #ifndef MAX_LINE_C
 #define MAX_LINE_C 0x10000
@@ -98,32 +104,41 @@ const char* get_alpha_line(FILE* fp) {
 }
 
 template <int NType, int NParam>
-const char* get_parameter(FILE* fp, std::vector<Parameter>& vec) {
+const char* get_parameter(FILE* fp, PrmData::parameter_map& vec) {
     while (1) {
         const char* _buf = get_alpha_line(fp), *buf = _buf;
         if (buf == NULL) {
             return buf;
         }
-        vec.emplace_back();
-        Parameter& data = vec.back();
+        std::vector<std::string> types(NType);
+
         for (int i = 0; i < NType; ++i) {
             if (*buf == '\0') {
-                vec.pop_back();
                 return _buf;
             }
             const char* start = skip_blank(buf);
             buf = find_blank(start);
-            data.type[i].assign(start, buf - start);
+            types[i].assign(start, buf - start);
         }
+
+        Parameter param;
         for (int i = 0; i < NParam; ++i) {
             char* end;
-            data.param[i] = strtod(buf, &end);
+            param.param[i] = strtod(buf, &end);
             if (end == buf) {
-                vec.pop_back();
                 return _buf;
             }
             buf = end;
         }
+
+        for (int i = 0; i < NType; ++i) {
+            types[i] = TypeKey::get_replace_type(types[i]);
+        }
+        TypeKey key(types);
+        if (vec.count(key)) {
+            fprintf(stdout, "[Warning] line repeated(same keys), using new line: %s", _buf);
+        }
+        vec.emplace(key, param);
     }
 }
 
@@ -182,29 +197,26 @@ FILE* get_file(const char* filename, const char* mode) {
     return fp;
 }
 
-void print_prm_data(const char* id, const std::vector<Parameter>& vec,
-    int type_n, int param_n) {
-    int len = static_cast<int>(vec.size());
-    fprintf(stdout, "[PrmData] %s %d\n", id, len);
-    for (int i = 0; i < len; ++i) {
-        for (int j = 0; j < type_n; ++j) {
-            fprintf(stdout, "%16s\t", vec[i].type[j].c_str());
-        }
+void print_prm_data(const char* id, const PrmData::parameter_map& vec,
+                    int param_n) {
+    fprintf(stdout, "[PrmData] %s %d\n", id, static_cast<int>(vec.size()));
+    for (const auto& i : vec) {
+        fprintf(stdout, "%16s\t", i.first.types.c_str());
         for (int j = 0; j < param_n; ++j) {
-            fprintf(stdout, "%16lf\t", vec[i].param[j]);
+            fprintf(stdout, "%10lf\t", i.second.param[j]);
         }
         fprintf(stdout, "\n");
     }
 }
 
 void print_prm_data() {
-    print_prm_data("BONDS", _prm_data_global.bond, 2, 2);
-    print_prm_data("ANGLES", _prm_data_global.angle, 3, 2);
-    print_prm_data("DIHEDRALS", _prm_data_global.dihedral, 4, 3);
-    print_prm_data("IMPROPER", _prm_data_global.improper, 4, 2);
+    print_prm_data("BONDS", _prm_data_global.bond, 2);
+    print_prm_data("ANGLES", _prm_data_global.angle, 2);
+    print_prm_data("DIHEDRALS", _prm_data_global.dihedral, 3);
+    print_prm_data("IMPROPER", _prm_data_global.improper, 2);
 }
 
-int process(FILE* fp) {
+int get_prm_data(FILE* fp) {
     const char* bond_line = "BONDS";
     const char* angle_line = "ANGLES";
     const char* dihedral_line = "DIHEDRALS";
@@ -226,16 +238,77 @@ int process(FILE* fp) {
         }
     }
 
-#ifdef DEBUG_ReadPrmFile
+#if defined(DEBUG_ReadPrmFile)
         print_prm_data();
 #endif // DEBUG_ReadPrmFile
 
     return 0;
 }
 
+std::string TypeKey::get_replace_type(const std::string& type) {
+    static int id = 0;
+    static std::unordered_map<std::string, std::string> replace;
+    if (replace.count(type) == 0) {
+        std::string replace_type = TypeKey::delimiter + std::to_string(++id);
+        // sizeof(atom.potential) == 6
+        if (replace_type.size() >= sizeof(Atom{}.potential)) {
+            fprintf(stderr, "the type of atom should < %d\n", id);
+            exit(118);
+        }
+        replace[type] = replace_type;
+    }
+    return replace[type];
+}
+
+const char* is_replace_type(const Atom& atom) {
+    if (strcmp(atom.element, "C") == 0) {
+        std::unordered_map<std::string, int> have;
+        for (int i = atom.no_connect; i--; ) {
+            ++have[atoms[atom.conn_no[i]].element];
+        }
+        if (have["F"]) {
+            return "C4_c1_f3";
+        }
+        int N_num = have["N"];
+        if (N_num == 0) {
+            return "C3_c2";
+        } else if (N_num == 1) {
+            return "C3_c2_n1";
+        } else if (N_num == 2) {
+            return "C3_c1_n2";
+        }
+    } else if (strcmp(atom.element, "H") == 0) {
+        return "H1_c";
+    } else if (strcmp(atom.element, "Cu") == 0) {
+        return "CU2_nn";
+    } else if (strcmp(atom.element, "N") == 0) {
+        return "N3_c2_cu1";
+    } else if (strcmp(atom.element, "F") == 0) {
+        return "F1_c";
+    }
+    return nullptr;
+}
+
+int replace_atom_type() {
+    for (int i = 0; i < total_no_atoms; ++i) {
+        Atom& atom = atoms[i];
+        const char* type_str = is_replace_type(atom);
+        if (type_str) {
+            std::string type = TypeKey::get_replace_type(type_str);
+            _prm_data_global.replace[type] = atom.potential;
+#if defined(DEBUG_ReadPrmFile)
+            fprintf(stdout, "[replace] %8s -> %8s(%s)\n", atom.potential, type_str, type.c_str());
+#endif // DEBUG_ReadPrmFile
+            strncpy(atom.potential, type.c_str(), sizeof(atom.potential) - 1);
+        }
+    }
+    return 0;
+}
+
 void ReadPrmFile() {
+    replace_atom_type();
     FILE* fp = get_file((std::string(rootname) + ".prm").c_str(), "r");
-    process(fp);
+    get_prm_data(fp);
     if (fp != stdin) {
         fclose(fp);
     }
