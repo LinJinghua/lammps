@@ -330,7 +330,7 @@ void GetParameters()
       strncpy(potential_types[j],
               atomtypes[dihedraltypes[i].types[j]].potential,5);
 
-    if (PrmData::DihedralParameter::set_parameter(potential_types, angletypes[i].params)) {
+    if (PrmData::DihedralParameter::set_parameter(potential_types, dihedraltypes[i].params)) {
         continue;
     } else {
         printf(" Unable to find torsion data for %s %s %s %s\n",
@@ -665,7 +665,7 @@ void GetParameters()
         strncpy(potential_types[j],
                 atomtypes[ooptypes[i].types[j]].potential,5);
 
-      if (PrmData::ImproperParameter::set_parameter(potential_types, angletypes[i].params)) {
+      if (PrmData::ImproperParameter::set_parameter(potential_types, ooptypes[i].params)) {
           continue;
       } else {
           printf(" Unable to find oop data for %s %s %s %s\n",
