@@ -292,18 +292,18 @@ int count_bonds()
 {
   int i,j,n;
 
-#ifndef DEBUG_MakeLists_Count
+#ifdef DEBUG_MakeLists_Count
   int xx = 0;
 #endif // DEBUG_MakeLists_Count
   for (n=0,i=0; i < total_no_atoms; i++) {
-#ifndef DEBUG_MakeLists_Count
+#ifdef DEBUG_MakeLists_Count
     xx += atoms[i].no_connect;
 #endif // DEBUG_MakeLists_Count
     for (j=0; j < atoms[i].no_connect; j++) {
       if (i < atoms[i].conn_no[j]) n++;
     }
   }
-#ifndef DEBUG_MakeLists_Count
+#ifdef DEBUG_MakeLists_Count
   if (xx != n * 2) fprintf(stdout, "[bonds] Error %d %d\n", xx, n);
   fprintf(stdout, "[bonds] %d %d %d\n", xx, xx / 2, n);
 #endif // DEBUG_MakeLists_Count
@@ -330,11 +330,11 @@ int count_angles()
 {
   int i,j,k,n;
 
-#ifndef DEBUG_MakeLists_Count
+#ifdef DEBUG_MakeLists_Count
   int xx = 0;
 #endif // DEBUG_MakeLists_Count
   for (n=0,j=0; j < total_no_atoms; j++) {
-#ifndef DEBUG_MakeLists_Count
+#ifdef DEBUG_MakeLists_Count
     xx += atoms[j].no_connect * (atoms[j].no_connect - 1) / 2;
 #endif // DEBUG_MakeLists_Count
     if (atoms[j].no_connect > 1) {
@@ -345,7 +345,7 @@ int count_angles()
       }
     }
   }
-#ifndef DEBUG_MakeLists_Count
+#ifdef DEBUG_MakeLists_Count
   if (xx != n) fprintf(stdout, "[angles] Error %d %d\n", xx, n);
   fprintf(stdout, "[angles] %d %d\n", xx, n);
 #endif // DEBUG_MakeLists_Count
@@ -376,15 +376,15 @@ int count_dihedrals()
   int i,j,k,l,n;
   int ii,kk,ll;
 
-#ifndef DEBUG_MakeLists_Count
+#ifdef DEBUG_MakeLists_Count
   int xx = 0;
 #endif // DEBUG_MakeLists_Count
   for (n=0,j=0; j < total_no_atoms; j++) {
-#ifndef DEBUG_MakeLists_Count
+#ifdef DEBUG_MakeLists_Count
     int xx_cur = atoms[j].no_connect;
     for (int xx_i = 0; xx_i < xx_cur; xx_i++) {
       int xx_j = atoms[j].conn_no[xx_i];
-#ifndef UNIFIED_COUNT
+#ifdef UNIFIED_COUNT
       if (xx_j < j) continue;
 #endif // UNIFIED_COUNT
       int xx_next = atoms[xx_j].no_connect;
@@ -416,7 +416,7 @@ int count_dihedrals()
                 for (ll=0; ll < atoms[k].no_connect; ll++) {
                   l = atoms[k].conn_no[ll];
                   if ((l != j) && (i != l)) n++;
-#ifndef DEBUG_MakeLists_Count
+#ifdef DEBUG_MakeLists_Count
                   if (l == i) fprintf(stdout, "[dihedrals] Error with Triangle\n");
 #endif // DEBUG_MakeLists_Count
                 }
@@ -427,7 +427,7 @@ int count_dihedrals()
       }
     }
   }
-#ifndef DEBUG_MakeLists_Count
+#ifdef DEBUG_MakeLists_Count
 #ifndef UNIFIED_COUNT
   if (xx != n) fprintf(stdout, "[dihedrals] Error %d %d\n", xx, n);
   fprintf(stdout, "[dihedrals] %d %d\n", xx, n);
@@ -555,7 +555,7 @@ void build_atomtypes_list()
         if (atomtypes[k].no_connect != atoms[j].no_connect) {
           if (pflag > 0) fprintf(stderr," WARNING inconsistent # of connects on atom %d type %s\n",j,
                                  atomtypes[k].potential);
-#ifndef DEBUG_MakeLists_Count
+#ifdef DEBUG_MakeLists_Count
           // fprintf(stdout," WARNING inconsistent # of connects on atom %d %d %d type %s %s:%s\n",j,
           //                     atomtypes[k].no_connect, atoms[j].no_connect, atomtypes[k].potential,
           //                                                   atoms[j].residue_string, atoms[j].name);

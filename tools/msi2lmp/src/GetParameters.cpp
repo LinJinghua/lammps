@@ -128,6 +128,11 @@ void GetParameters()
               atomtypes[bondtypes[i].types[j]].potential,5);
     if (PrmData::BondParameter::set_parameter(potential_types, bondtypes[i].params)) {
         continue;
+    } else {
+        printf(" Unable to find bond data for %s %s\n",
+             TypeKey::get_replace_raw_type(potential_types[0]),
+             TypeKey::get_replace_raw_type(potential_types[1]));
+        continue;
     }
     k = find_match(2,potential_types,ff_bond,&backwards);
     if (k < 0) {
@@ -189,7 +194,11 @@ void GetParameters()
     if (PrmData::AngleParameter::set_parameter(potential_types, angletypes[i].params)) {
         continue;
     } else {
-        // continue;
+        printf(" Unable to find angle data for %s %s %s\n",
+             TypeKey::get_replace_raw_type(potential_types[0]),
+             TypeKey::get_replace_raw_type(potential_types[1]),
+             TypeKey::get_replace_raw_type(potential_types[2]));
+        continue;
     }
     for (j = 0; j < 3; j++)
         strncpy(potential_types[j],
@@ -324,7 +333,12 @@ void GetParameters()
     if (PrmData::DihedralParameter::set_parameter(potential_types, angletypes[i].params)) {
         continue;
     } else {
-        // continue;
+        printf(" Unable to find torsion data for %s %s %s %s\n",
+             TypeKey::get_replace_raw_type(potential_types[0]),
+             TypeKey::get_replace_raw_type(potential_types[1]),
+             TypeKey::get_replace_raw_type(potential_types[2]),
+             TypeKey::get_replace_raw_type(potential_types[3]));
+        continue;
     }
     for (j = 0; j < 4; j++)
         strncpy(potential_types[j],
@@ -654,7 +668,12 @@ void GetParameters()
       if (PrmData::ImproperParameter::set_parameter(potential_types, angletypes[i].params)) {
           continue;
       } else {
-          // continue;
+          printf(" Unable to find oop data for %s %s %s %s\n",
+             TypeKey::get_replace_raw_type(potential_types[0]),
+             TypeKey::get_replace_raw_type(potential_types[1]),
+             TypeKey::get_replace_raw_type(potential_types[2]),
+             TypeKey::get_replace_raw_type(potential_types[3]));
+          continue;
       }
       for (j = 0; j < 4; j++)
           strncpy(potential_types[j],
