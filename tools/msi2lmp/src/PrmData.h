@@ -113,14 +113,15 @@ typedef struct PrmData {
 
     template <int _Id>
     typename ParameterType<_Id>::type::map& get_map() {
-        if constexpr (_Id == BOND_ID) {
-            return bond;
-        } else if constexpr (_Id == ANGLE_ID) {
-            return angle;
-        } else if constexpr (_Id == DIHEDRAL_ID) {
-            return dihedral;
+        using map_type = typename ParameterType<_Id>::type::map;
+        if (_Id == BOND_ID) {
+            return *reinterpret_cast<map_type*>(&(this->bond));
+        } else if (_Id == ANGLE_ID) {
+            return *reinterpret_cast<map_type*>(&(this->angle));;
+        } else if (_Id == DIHEDRAL_ID) {
+            return *reinterpret_cast<map_type*>(&(this->dihedral));;
         } else {
-            return improper;
+            return *reinterpret_cast<map_type*>(&(this->improper));;
         }
     }
 
