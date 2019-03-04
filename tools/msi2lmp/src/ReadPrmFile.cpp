@@ -216,7 +216,23 @@ int get_prm_data(FILE* fp) {
     return 0;
 }
 
-std::string TypeKey::get_replace_type(const std::string& type) {
+const char* TypeKey::get_potential_type(const char* type) {
+    return PrmData::_prm_data.potential[type].data();
+}
+
+const std::string& TypeKey::get_potential_type(const std::string& type) {
+    return PrmData::_prm_data.potential[type];
+}
+
+const char* TypeKey::get_replace_raw_type(const char* type) {
+    return PrmData::_prm_data.replace_raw[type].data();
+}
+
+const std::string& TypeKey::get_replace_raw_type(const std::string& type) {
+    return PrmData::_prm_data.replace_raw[type];
+}
+
+const std::string& TypeKey::get_replace_type(const std::string& type) {
     static int id = 0;
     if (PrmData::_prm_data.replace.count(type) == 0) {
         std::string replace_type = TypeKey::delimiter + std::to_string(++id);
@@ -226,6 +242,7 @@ std::string TypeKey::get_replace_type(const std::string& type) {
             exit(118);
         }
         PrmData::_prm_data.replace[type] = replace_type;
+        PrmData::_prm_data.replace_raw[replace_type] = type;
     }
     return PrmData::_prm_data.replace[type];
 }
@@ -265,12 +282,12 @@ int replace_atom_type() {
         Atom& atom = atoms[i];
         const char* type_str = is_replace_type(atom);
         if (type_str) {
-            std::string type = TypeKey::get_replace_type(type_str);
+            const std::string& type = TypeKey::get_replace_type(type_str);
             PrmData::_prm_data.atom[i] = atom.potential;
             if (PrmData::_prm_data.potential.count(type)) {
                 if (PrmData::_prm_data.potential[type] != atom.potential) {
                     fprintf(stdout, "[Warning]: diff type. %s <- %s, %s\n",
-                            type.c_str(), atom.potential, PrmData::_prm_data.potential[type].c_str());
+                            type_str, atom.potential, PrmData::_prm_data.potential[type].c_str());
                 }
             } else {
                 PrmData::_prm_data.potential[type] = atom.potential;

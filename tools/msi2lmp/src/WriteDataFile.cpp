@@ -4,6 +4,7 @@
 
 #include "msi2lmp.h"
 #include "Forcefield.h"
+#include "PrmData.h"
 
 #include <stdlib.h>
 
@@ -79,7 +80,8 @@ void WriteDataFile(char *nameroot)
 
   fprintf(DatF, "\nMasses\n\n");
   for(k=0; k < no_atom_types; k++) {
-    if (hintflag) fprintf(DatF, " %3d %10.6f # %s\n",k+1,atomtypes[k].mass,atomtypes[k].potential);
+    if (hintflag) fprintf(DatF, " %3d %10.6f # %s\n",k+1,atomtypes[k].mass,
+                        TypeKey::get_replace_raw_type(atomtypes[k].potential));
     else fprintf(DatF, " %3d %10.6f\n",k+1,atomtypes[k].mass);
   }
   fputs("\n",DatF);
@@ -100,7 +102,8 @@ void WriteDataFile(char *nameroot)
     for ( j = 0; j < 2; j++)
       fprintf(DatF, "%14.10f ",atomtypes[i].params[j]);
 
-    if (hintflag) fprintf(DatF, "# %s\n",atomtypes[i].potential);
+    if (hintflag) fprintf(DatF, "# %s\n",
+                TypeKey::get_replace_raw_type(atomtypes[i].potential));
     else fputs("\n",DatF);
   }
   fputs("\n",DatF);
@@ -124,8 +127,9 @@ void WriteDataFile(char *nameroot)
       for ( j = 0; j < m; j++)
         fprintf(DatF, " %10.4f", bondtypes[i].params[j]);
 
-      if (hintflag) fprintf(DatF," # %s-%s\n",atomtypes[bondtypes[i].types[0]].potential,
-                            atomtypes[bondtypes[i].types[1]].potential);
+      if (hintflag) fprintf(DatF," # %s-%s\n",
+                TypeKey::get_replace_raw_type(atomtypes[bondtypes[i].types[0]].potential),
+                TypeKey::get_replace_raw_type(atomtypes[bondtypes[i].types[1]].potential));
       else fputs("\n",DatF);
     }
     fputs("\n",DatF);
@@ -151,9 +155,9 @@ void WriteDataFile(char *nameroot)
         fprintf(DatF, " %10.4f", angletypes[i].params[j]);
 
       if (hintflag) fprintf(DatF," # %s-%s-%s\n",
-                            atomtypes[angletypes[i].types[0]].potential,
-                            atomtypes[angletypes[i].types[1]].potential,
-                            atomtypes[angletypes[i].types[2]].potential);
+                            TypeKey::get_replace_raw_type(atomtypes[angletypes[i].types[0]].potential),
+                            TypeKey::get_replace_raw_type(atomtypes[angletypes[i].types[1]].potential),
+                            TypeKey::get_replace_raw_type(atomtypes[angletypes[i].types[2]].potential));
       else fputs("\n",DatF);
     }
     fputs("\n",DatF);
@@ -173,10 +177,10 @@ void WriteDataFile(char *nameroot)
                 (int) dihedraltypes[i].params[1],
                 (int) dihedraltypes[i].params[2]);
         if (hintflag) fprintf(DatF," # %s-%s-%s-%s\n",
-                              atomtypes[dihedraltypes[i].types[0]].potential,
-                              atomtypes[dihedraltypes[i].types[1]].potential,
-                              atomtypes[dihedraltypes[i].types[2]].potential,
-                              atomtypes[dihedraltypes[i].types[3]].potential);
+                              TypeKey::get_replace_raw_type(atomtypes[dihedraltypes[i].types[0]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[dihedraltypes[i].types[1]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[dihedraltypes[i].types[2]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[dihedraltypes[i].types[3]].potential));
         else fputs("\n",DatF);
       }
       fputs("\n",DatF);
@@ -191,10 +195,10 @@ void WriteDataFile(char *nameroot)
           fprintf(DatF, " %10.4f",dihedraltypes[i].params[j]);
 
         if (hintflag) fprintf(DatF," # %s-%s-%s-%s\n",
-                              atomtypes[dihedraltypes[i].types[0]].potential,
-                              atomtypes[dihedraltypes[i].types[1]].potential,
-                              atomtypes[dihedraltypes[i].types[2]].potential,
-                              atomtypes[dihedraltypes[i].types[3]].potential);
+                              TypeKey::get_replace_raw_type(atomtypes[dihedraltypes[i].types[0]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[dihedraltypes[i].types[1]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[dihedraltypes[i].types[2]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[dihedraltypes[i].types[3]].potential));
         else fputs("\n",DatF);
       }
       fputs("\n",DatF);
@@ -209,10 +213,10 @@ void WriteDataFile(char *nameroot)
           fprintf(DatF, " %10.4f",dihedraltypes[i].params[j]);
 
         if (hintflag) fprintf(DatF,"# %s-%s-%s-%s\n",
-                              atomtypes[dihedraltypes[i].types[0]].potential,
-                              atomtypes[dihedraltypes[i].types[1]].potential,
-                              atomtypes[dihedraltypes[i].types[2]].potential,
-                              atomtypes[dihedraltypes[i].types[3]].potential);
+                              TypeKey::get_replace_raw_type(atomtypes[dihedraltypes[i].types[0]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[dihedraltypes[i].types[1]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[dihedraltypes[i].types[2]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[dihedraltypes[i].types[3]].potential));
         else fputs("\n",DatF);
       }
       fputs("\n",DatF);
@@ -231,10 +235,10 @@ void WriteDataFile(char *nameroot)
                 (int) ooptypes[i].params[2]);
 
         if (hintflag) fprintf(DatF,"# %s-%s-%s-%s\n",
-                              atomtypes[ooptypes[i].types[0]].potential,
-                              atomtypes[ooptypes[i].types[1]].potential,
-                              atomtypes[ooptypes[i].types[2]].potential,
-                              atomtypes[ooptypes[i].types[3]].potential);
+                              TypeKey::get_replace_raw_type(atomtypes[ooptypes[i].types[0]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[ooptypes[i].types[1]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[ooptypes[i].types[2]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[ooptypes[i].types[3]].potential));
         else fputs("\n",DatF);
       }
       fputs("\n",DatF);
@@ -251,10 +255,10 @@ void WriteDataFile(char *nameroot)
                 (int) ooptypes[i].params[2]);
 
         if (hintflag) fprintf(DatF,"# %s-%s-%s-%s\n",
-                              atomtypes[ooptypes[i].types[0]].potential,
-                              atomtypes[ooptypes[i].types[1]].potential,
-                              atomtypes[ooptypes[i].types[2]].potential,
-                              atomtypes[ooptypes[i].types[3]].potential);
+                              TypeKey::get_replace_raw_type(atomtypes[ooptypes[i].types[0]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[ooptypes[i].types[1]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[ooptypes[i].types[2]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[ooptypes[i].types[3]].potential));
         else fputs("\n",DatF);
       }
       fputs("\n",DatF);
@@ -270,10 +274,10 @@ void WriteDataFile(char *nameroot)
           fprintf(DatF, "%10.4f ", ooptypes[i].params[j]);
 
         if (hintflag) fprintf(DatF,"# %s-%s-%s-%s\n",
-                              atomtypes[ooptypes[i].types[0]].potential,
-                              atomtypes[ooptypes[i].types[1]].potential,
-                              atomtypes[ooptypes[i].types[2]].potential,
-                              atomtypes[ooptypes[i].types[3]].potential);
+                              TypeKey::get_replace_raw_type(atomtypes[ooptypes[i].types[0]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[ooptypes[i].types[1]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[ooptypes[i].types[2]].potential),
+                              TypeKey::get_replace_raw_type(atomtypes[ooptypes[i].types[3]].potential));
         else fputs("\n",DatF);
       }
       for (i=0; i < no_angleangle_types; i++) {
@@ -400,7 +404,8 @@ void WriteDataFile(char *nameroot)
             atoms[k].image[0],
             atoms[k].image[1],
             atoms[k].image[2]);
-    if (hintflag) fprintf(DatF," # %s\n",atomtypes[typ].potential);
+    if (hintflag) fprintf(DatF," # %s\n",
+          TypeKey::get_replace_raw_type(atomtypes[typ].potential));
     else fputs("\n",DatF);
   }
   fputs("\n",DatF);

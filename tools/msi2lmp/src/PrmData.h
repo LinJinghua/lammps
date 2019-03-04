@@ -42,7 +42,11 @@ typedef struct TypeKey {
     }
 
     static constexpr const char* delimiter = "\f";
-    static std::string get_replace_type(const std::string& type);
+    static const char* get_potential_type(const char* type);
+    static const std::string& get_potential_type(const std::string& type);
+    static const std::string& get_replace_type(const std::string& type);
+    static const char* get_replace_raw_type(const char* type);
+    static const std::string& get_replace_raw_type(const std::string& type);
 
 } TypeKey;
 
@@ -140,7 +144,7 @@ typedef struct PrmData {
     ParameterType<ANGLE_ID>::type::map angle;
     ParameterType<DIHEDRAL_ID>::type::map dihedral;
     ParameterType<IMPROPER_ID>::type::map improper;
-    potential_map potential, replace;
+    potential_map potential, replace, replace_raw;
     atom_map atom;
 } PrmData;
 
